@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Desk Calc</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --body-dark: #2b2a28;
+    --body-darker: #211f1e;
+    --panel-lcd: #cfd6b0;
+    --panel-lcd-dim: #b9c19c;
+    --key-cream: #eee9df;
+    --key-cream-shadow: #b9b3a4;
+    --key-slate: #4a4844;
+    --key-slate-shadow: #302f2c;
+    --accent-amber: #d97a29;
+    --accent-amber-shadow: #a35415;
+    --accent-red: #b6402f;
+    --accent-red-shadow: #85281c;
+    --ink: #2a2a26;
+    --screen-ink: #2f3a20;
+  }
+ 
+  *{ box-sizing: border-box; }
+ 
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(circle at 30% 20%, #3a3835 0%, #1c1b19 70%);
+    font-family:'Space Grotesk', sans-serif;
+    padding: 24px;
+  }
+ 
+  .desk-label{
+    position:absolute;
+    top: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #7d7a73;
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+ 
+  .calc{
+    width: 320px;
+    background: linear-gradient(160deg, var(--body-dark), var(--body-darker));
+    border-radius: 22px;
+    padding: 18px 18px 22px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.7),
+      0 2px 0 rgba(255,255,255,0.04) inset,
+      0 -2px 0 rgba(0,0,0,0.4) inset;
+    position: relative;
+  }
+ 
+  .calc::before{
+    content:"";
+    position:absolute;
+    top:10px; left:10px; right:10px; bottom:10px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.04);
+    pointer-events:none;
+  }
+ 
+  .brand{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding: 4px 8px 12px;
+    color: #8b877e;
+  }
+  .brand .name{
+    font-weight:700;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color:#c7c3b8;
+  }
+  .brand .model{
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+ 
+  .screen{
+    background: linear-gradient(180deg, var(--panel-lcd), var(--panel-lcd-dim));
+    border-radius: 10px;
+    padding: 18px 16px 12px;
+    margin-bottom: 16px;
+    box-shadow:
+      inset 0 3px 8px rgba(0,0,0,0.35),
+      inset 0 -1px 0 rgba(255,255,255,0.25);
+    position: relative;
+    overflow: hidden;
+  }
+  .screen::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0.035) 0px,
+      rgba(0,0,0,0.035) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    pointer-events:none;
+  }
+ 
+  .screen-expr{
+    min-height: 16px;
+    text-align:right;
+    color: var(--screen-ink);
+    opacity: 0.55;
+    font-family:'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+  }
+ 
+  .screen-main{
+    text-align:right;
+    color: var(--screen-ink);
+    font-family:'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 40px;
+    line-height: 1.1;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    text-shadow: 0 0 1px rgba(47,58,32,0.3);
+  }
+  .screen-main::-webkit-scrollbar{ display:none; }
+ 
+  .keys{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+ 
+  button.key{
+    appearance:none;
+    border:none;
+    cursor:pointer;
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    height: 56px;
+    border-radius: 12px;
+    color: var(--ink);
+    background: var(--key-cream);
+    box-shadow:
+      0 4px 0 var(--key-cream-shadow),
+      0 6px 10px rgba(0,0,0,0.35);
+    transition: transform 0.06s ease, box-shadow 0.06s ease;
+    position: relative;
+  }
+  button.key:active,
+  button.key.pressed{
+    transform: translateY(3px);
+    box-shadow:
+      0 1px 0 var(--key-cream-shadow),
+      0 2px 4px rgba(0,0,0,0.35);
+  }
+ 
+  button.key.op{
+    background: var(--accent-amber);
+    color: #fff6ec;
+    box-shadow:
+      0 4px 0 var(--accent-amber-shadow),
+      0 6px 10px rgba(0,0,0,0.35);
+  }
+  button.key.op:active,
+  button.key.op.pressed{
+    box-shadow:
+      0 1px 0 var(--accent-amber-shadow),
+      0 2px 4px rgba(0,0,0,0.35);
+  }
+ 
+  button.key.func{
+    background: var(--key-slate);
+    color: #ece9e2;
+    box-shadow:
+      0 4px 0 var(--key-slate-shadow),
+      0 6px 10px rgba(0,0,0,0.35);
+    font-size: 15px;
+  }
+  button.key.func:active,
+  button.key.func.pressed{
+    box-shadow:
+      0 1px 0 var(--key-slate-shadow),
+      0 2px 4px rgba(0,0,0,0.35);
+  }
+ 
+  button.key.clear{
+    background: var(--accent-red);
+    color: #fff0ec;
+    box-shadow:
+      0 4px 0 var(--accent-red-shadow),
+      0 6px 10px rgba(0,0,0,0.35);
+  }
+  button.key.clear:active,
+  button.key.clear.pressed{
+    box-shadow:
+      0 1px 0 var(--accent-red-shadow),
+      0 2px 4px rgba(0,0,0,0.35);
+  }
+ 
+  button.key.equals{
+    grid-column: span 2;
+  }
+ 
+  button.key.zero{
+    grid-column: span 2;
+  }
+ 
+  .hint{
+    text-align:center;
+    color:#6f6c65;
+    font-size: 10px;
+    letter-spacing: 1px;
+    margin-top: 14px;
+  }
+ 
+  @media (prefers-reduced-motion: reduce){
+    button.key{ transition:none; }
+  }
+</style>
+</head>
+<body>
+ 
+<div class="calc">
+  <div class="brand">
+    <span class="name">DESK&nbsp;CALC</span>
+    <span class="model">MK.01</span>
+  </div>
+ 
+  <div class="screen">
+    <div class="screen-expr" id="expr">&nbsp;</div>
+    <div class="screen-main" id="main">0</div>
+  </div>
+ 
+  <div class="keys">
+    <button class="key clear" data-action="clear">AC</button>
+    <button class="key func" data-action="backspace">⌫</button>
+    <button class="key func" data-action="percent">%</button>
+    <button class="key op" data-action="÷">÷</button>
+ 
+    <button class="key" data-num="7">7</button>
+    <button class="key" data-num="8">8</button>
+    <button class="key" data-num="9">9</button>
+    <button class="key op" data-action="×">×</button>
+ 
+    <button class="key" data-num="4">4</button>
+    <button class="key" data-num="5">5</button>
+    <button class="key" data-num="6">6</button>
+    <button class="key op" data-action="−">−</button>
+ 
+    <button class="key" data-num="1">1</button>
+    <button class="key" data-num="2">2</button>
+    <button class="key" data-num="3">3</button>
+    <button class="key op" data-action="+">+</button>
+ 
+    <button class="key zero" data-num="0">0</button>
+    <button class="key" data-action="decimal">.</button>
+    <button class="key equals op" data-action="equals">=</button>
+  </div>
+ 
+  <div class="hint">KEYBOARD READY · ESC CLEARS</div>
+</div>
+ 
+<script>
+(function(){
+  const mainEl = document.getElementById('main');
+  const exprEl = document.getElementById('expr');
+ 
+  let current = "0";
+  let previous = null;
+  let operator = null;
+  let justEvaluated = false;
+  const MAX_LEN = 14;
+ 
+  function opSymbolToWord(op){
+    return { '+':'+', '−':'−', '×':'×', '÷':'÷' }[op] || '';
+  }
+ 
+  function formatNumber(numStr){
+    if (numStr === "Error") return numStr;
+    if (numStr.endsWith(".")) return numStr;
+    const num = parseFloat(numStr);
+    if (Number.isNaN(num)) return "0";
+    if (Math.abs(num) >= 1e12 || (Math.abs(num) < 1e-9 && num !== 0)) {
+      return num.toExponential(4);
+    }
+    let s = numStr;
+    if (s.length > MAX_LEN) {
+      s = parseFloat(num.toPrecision(10)).toString();
+    }
+    return s;
+  }
+ 
+  function render(){
+    mainEl.textContent = formatNumber(current);
+    if (operator && previous !== null){
+      exprEl.textContent = `${formatNumber(previous)} ${opSymbolToWord(operator)}`;
+    } else {
+      exprEl.textContent = '\u00A0';
+    }
+  }
+ 
+  function inputDigit(d){
+    if (justEvaluated){
+      current = d;
+      justEvaluated = false;
+    } else if (current === "0"){
+      current = d;
+    } else {
+      if (current.replace('-','').replace('.','').length >= MAX_LEN) return;
+      current += d;
+    }
+    render();
+  }
+ 
+  function inputDecimal(){
+    if (justEvaluated){
+      current = "0.";
+      justEvaluated = false;
+      render();
+      return;
+    }
+    if (!current.includes(".")) {
+      current += ".";
+      render();
+    }
+  }
+ 
+  function clearAll(){
+    current = "0";
+    previous = null;
+    operator = null;
+    justEvaluated = false;
+    render();
+  }
+ 
+  function backspace(){
+    if (justEvaluated) { clearAll(); return; }
+    if (current.length <= 1 || (current.length === 2 && current.startsWith('-'))){
+      current = "0";
+    } else {
+      current = current.slice(0, -1);
+    }
+    render();
+  }
+ 
+  function toggleSign(){
+    if (current === "0") return;
+    current = current.startsWith('-') ? current.slice(1) : '-' + current;
+    render();
+  }
+ 
+  function percent(){
+    const val = parseFloat(current);
+    if (Number.isNaN(val)) return;
+    current = String(val / 100);
+    render();
+  }
+ 
+  function compute(a, b, op){
+    switch(op){
+      case '+': return a + b;
+      case '−': return a - b;
+      case '×': return a * b;
+      case '÷': return b === 0 ? NaN : a / b;
+      default: return b;
+    }
+  }
+ 
+  function chooseOperator(op){
+    const val = parseFloat(current);
+    if (operator && previous !== null && !justEvaluated){
+      const result = compute(previous, val, operator);
+      if (Number.isNaN(result)){
+        current = "Error";
+        previous = null;
+        operator = null;
+        justEvaluated = true;
+        render();
+        return;
+      }
+      previous = result;
+    } else {
+      previous = val;
+    }
+    operator = op;
+    justEvaluated = false;
+    current = "0";
+    render();
+  }
+ 
+  function equals(){
+    if (operator === null || previous === null) return;
+    const val = parseFloat(current);
+    const result = compute(previous, val, operator);
+    if (Number.isNaN(result)){
+      current = "Error";
+    } else {
+      current = String(result);
+    }
+    previous = null;
+    operator = null;
+    justEvaluated = true;
+    render();
+  }
+ 
+  function flashKey(el){
+    if (!el) return;
+    el.classList.add('pressed');
+    setTimeout(()=> el.classList.remove('pressed'), 100);
+  }
+ 
+  document.querySelectorAll('.key').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.dataset.num !== undefined){
+        inputDigit(btn.dataset.num);
+      } else {
+        const action = btn.dataset.action;
+        if (action === 'clear') clearAll();
+        else if (action === 'backspace') backspace();
+        else if (action === 'percent') percent();
+        else if (action === 'decimal') inputDecimal();
+        else if (action === 'equals') equals();
+        else if (['+','−','×','÷'].includes(action)) chooseOperator(action);
+      }
+    });
+  });
+ 
+  const keyMap = {
+    '+': '+', '-': '−', '*': '×', '/': '÷',
+  };
+ 
+  window.addEventListener('keydown', (e) => {
+    let el = null;
+    if (e.key >= '0' && e.key <= '9'){
+      inputDigit(e.key);
+      el = document.querySelector(`[data-num="${e.key}"]`);
+    } else if (e.key === '.'){
+      inputDecimal();
+      el = document.querySelector('[data-action="decimal"]');
+    } else if (e.key === 'Enter' || e.key === '='){
+      e.preventDefault();
+      equals();
+      el = document.querySelector('[data-action="equals"]');
+    } else if (e.key === 'Backspace'){
+      backspace();
+      el = document.querySelector('[data-action="backspace"]');
+    } else if (e.key === 'Escape'){
+      clearAll();
+      el = document.querySelector('[data-action="clear"]');
+    } else if (e.key === '%'){
+      percent();
+      el = document.querySelector('[data-action="percent"]');
+    } else if (keyMap[e.key]){
+      const op = keyMap[e.key];
+      chooseOperator(op);
+      el = document.querySelector(`[data-action="${CSS.escape(op)}"]`);
+    }
+    flashKey(el);
+  });
+ 
+  render();
+})();
+</script>
+ 
+</body>
+</html>
